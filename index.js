@@ -32,6 +32,18 @@ app.get("/videolist", function (req, res) {
   });
 });
 
+app.get("/filelist", function (req, res) {
+  const vidoeDir = path.join(__dirname, "uploads");
+  fs.readdir(vidoeDir, function (err,files) {
+    if(err) {
+      res.status(500).send("error reading videolist")
+    } else {
+      let name = files.map((filename) => filename.replace(/-\d+p/, ""));
+      res.status(200).json(name);
+    }
+  });
+});
+
 app.get("/video", function (req, res) {
   // Ensure there is a range given for the video
   const range = req.headers.range;
@@ -76,6 +88,25 @@ function uploadFiles(req, res) {
   console.log(req.files);
   res.json({ message: "Successfully uploaded files" });
 }
+
+
+app.get('/view-file/:filename', (req, res) => {
+  const filename = './uploads/'+req.params.filename;
+
+  fs.readFile(filename, (err, data) => {
+    if (err) {
+      res.status(404).send('File not found');
+    } else {
+      res.contentType('image/png');
+      res.send(data);
+    }
+  });
+});
+
+
+
+
+
 
 app.listen(8000, function () {
   console.log("Listening on port 8000!");

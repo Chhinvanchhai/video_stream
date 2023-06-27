@@ -23,8 +23,22 @@
   <button class="changeQlt" style="padding: 10px; margin: 3px;">720</button>
   <button class="changeQlt" style="padding: 10px; margin: 3px;">320</button>
   <div style="color:white !important">
+    <div class="container">
+      <h1>File Upload</h1>
+      <form id='form'>
+        <div class="input-group">
+          <label for='files'>Select files</label>
+          <input id='files' type="file" multiple>
+        </div>
+        <button class="submit-btn" type='submit'>Upload</button>
+      </form>
+    </div>
     <h1>Vidoes List</h1>
     <ul id="videoList">
+
+    </ul>
+    <h1>Files List</h1>
+    <ul id="fileList">
 
     </ul>
   </div>
@@ -43,6 +57,7 @@
       })
     });
     getFileName();
+
     function getFileName() {
       var raw = "";
       fetch("http://localhost:8000/videolist")
@@ -50,7 +65,7 @@
         .then(result => {
           let res = JSON.parse(result)
           console.log('res', res)
-          res.forEach(function (item){
+          res.forEach(function (item) {
             // Create an "li" node:
             const node = document.createElement("li");
             const textnode = document.createTextNode(item);
@@ -61,6 +76,53 @@
           });
         })
         .catch(error => console.log('error', error));
+    }
+
+    getFilList();
+
+    function getFilList() {
+      let list = document.getElementById('fileList');
+      list.innerHTML = "";
+      var raw = "";
+      fetch("http://localhost:8000/filelist")
+        .then(response => response.text())
+        .then(result => {
+          let res = JSON.parse(result)
+          console.log('res', res)
+          res.forEach(function (item) {
+            // Create an "li" node:
+            const node = document.createElement("li");
+            const textnode = document.createTextNode(item);
+            node.appendChild(textnode);
+
+            list.appendChild(node)
+          });
+        })
+        .catch(error => console.log('error', error));
+    }
+
+
+    const form = document.getElementById("form");
+    form.addEventListener("submit", submitForm);
+    function submitForm(e) {
+      e.preventDefault();
+      const name = document.getElementById("name");
+      const getFiles = document.getElementById("files");
+      const formData = new FormData();
+      // formData.append("name", name.value);
+      for (let i = 0; i < getFiles.files.length; i++) {
+        console.log(getFiles.files[i]);
+        formData.append("files", getFiles.files[i]);
+      }
+      fetch("http://localhost:8000/update-file", {
+          method: 'POST',
+          body: formData
+        })
+        .then((res) => {
+          console.log(res)
+          getFilList();
+        })
+        .catch((err) => ("Error occured", err));
     }
   </script>
 </body>
