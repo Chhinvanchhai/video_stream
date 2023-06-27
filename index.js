@@ -1,9 +1,22 @@
 const express = require("express");
 const app = express();
 const fs = require("fs");
+const path = require("path");
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/index.html");
+});
+
+app.get("/videolist", function (req, res) {
+  const vidoeDir = path.join(__dirname, "videos");
+  fs.readdir(vidoeDir, function (err,files) {
+    if(err) {
+      res.status(500).send("error reading videolist")
+    } else {
+      let name = files.map((filename) => filename.replace(/-\d+p/, ""));
+      res.status(200).json(name);
+    }
+  });
 });
 
 app.get("/video", function (req, res) {
@@ -13,11 +26,11 @@ app.get("/video", function (req, res) {
   if (!range) {
     res.status(400).send("Requires Range header");
   }
-
-  const videoPath = "Chris-Do.mp4";
-  const videoSize = fs.statSync("Chris-Do.mp4").size;
+  const videoPath = `./videos/Chris-Do-${req.query.quality}.mp4`;
+  const videoSize = fs.statSync(videoPath).size;
 
   const CHUNK_SIZE = 10 ** 6; // 1MB
+  console.log(videoSize, '===========',  CHUNK_SIZE, req.query);
   const start = Number(range.replace(/\D/g, ""));
   const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
 
