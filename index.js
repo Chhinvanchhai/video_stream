@@ -2,6 +2,19 @@ const express = require("express");
 const app = express();
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads')
+  },
+  filename: function (req, file, cb) {
+    let extArray = file.mimetype.split("/");
+    let extension = extArray[extArray.length - 1];
+    cb(null, file.fieldname + '-' + Date.now()+ '.' +extension)
+  }
+})
+const upload = multer({ storage: storage })
+
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/index.html");
@@ -55,6 +68,14 @@ app.get("/video", function (req, res) {
   // Stream the video chunk to the client
   videoStream.pipe(res);
 });
+
+app.post('/update-file',upload.array("files"), uploadFiles);
+
+function uploadFiles(req, res) {
+  console.log(req.body);
+  console.log(req.files);
+  res.json({ message: "Successfully uploaded files" });
+}
 
 app.listen(8000, function () {
   console.log("Listening on port 8000!");
