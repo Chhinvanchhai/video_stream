@@ -10,13 +10,20 @@
     body {
       max-width: 100%;
       height: 100vh;
-      background-color: rgb(14, 14, 14);
+      background-color: rgb(14, 14, 14) !important;
       display: flex;
       margin: auto;
       align-items: center;
       justify-content: center;
     }
+
+    .pointer {
+      cursor: pointer;
+      padding: 4px;
+    }
   </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 </head>
 
 <body>
@@ -41,11 +48,54 @@
     <ul id="fileList">
 
     </ul>
+
+    <!-- new modal -->
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+      Launch demo modal
+    </button>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <img id="image_link" style="width: 100%;" />
+            <video id="videoPlayer2" width="70%" controls autoplay muted="false">
+              <source src="" type="video/mp4" />
+            </video>
+            <!-- <embed src="http://localhost:8000/uploads/files-1687861520591.pdf" width="500" height="375" type="application/pdf"> -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- end -->
   </div>
   <video id="videoPlayer" width="70%" controls autoplay muted="false">
     <source src="/video?quality=720" type="video/mp4" />
   </video>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"
+    integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous">
+  </script>
   <script>
+    var file_src = ""
+
+
+    // end
     var btn = document.querySelectorAll('.changeQlt');
     btn.forEach(function (click) {
       click.addEventListener('click', function (e) {
@@ -93,17 +143,63 @@
             // Create an "li" node:
             const node = document.createElement("li");
             const textnode = document.createTextNode(item);
+            node.className = 'link_file pointer';
             node.appendChild(textnode);
 
             list.appendChild(node)
           });
+          setTimeout(function () {
+            handleFileClick();
+          }, 600)
+        })
+        .catch(error => console.log('error', error));
+    }
+
+    function handleFileClick() {
+      const viewFile = document.querySelectorAll('.link_file');
+      const vm = this
+      viewFile.forEach(function (it) {
+        it.addEventListener('click', function (e) {
+          vm.viewFile(e.target.innerText)
+        })
+      })
+    }
+
+    function viewFile(name) {
+      fetch(`http://localhost:8000/view-file/${name}`)
+        .then(response => response.text())
+        .then(result => {
+          console.log('result', result)
+          const myModal = new bootstrap.Modal('#exampleModal', {
+            keyboard: false
+          })
+          let imageLink = document.getElementById('image_link')
+          let data = JSON.parse(result);
+          const parts = name.split('.');
+          const fileExtension = parts[parts.length - 1];
+          if(fileExtension == 'mp4') {
+            $('#videoPlayer2').show();
+            $('#image_link').hide();
+            var videoPlayer2 = document.getElementById('videoPlayer2');
+            var source2 = videoPlayer2.querySelector('source');
+            source2.setAttribute("src",  data.fileURL)
+            videoPlayer2.load();
+          } else {
+            $('#videoPlayer2').hide();
+            $('#image_link').show();
+            imageLink.setAttribute('src',  data.fileURL);
+          }
+
+          myModal.show();
         })
         .catch(error => console.log('error', error));
     }
 
 
+
     const form = document.getElementById("form");
     form.addEventListener("submit", submitForm);
+
     function submitForm(e) {
       e.preventDefault();
       const name = document.getElementById("name");
